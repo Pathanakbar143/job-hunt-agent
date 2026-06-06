@@ -12,3 +12,6 @@ pandas
 python-dotenv
 google-generativeai
 apify-client
+pypdf
+pydantic
+duckduckgo-api-haystack
