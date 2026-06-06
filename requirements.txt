@@ -1,0 +1,11 @@
+torch --index-url https://download.pytorch.org/whl/cpu
+sentence-transformers
+scikit-learn
+langchain
+langchain-google-genai
+langchain-groq
+langgraph
+gspread
+google-auth
+streamlit
+pandas
