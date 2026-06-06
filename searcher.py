@@ -71,26 +71,48 @@ def save_to_spreadsheet(jobs_data: list, filename: str = "jobs_database.csv"):
     # 2. Convert new jobs to a DataFrame
     new_df = pd.DataFrame(jobs_data)
     
+    # --- HARMONIZATION: Fix new incoming data ---
+    if 'link' not in new_df.columns and 'Application Link' in new_df.columns:
+        new_df['link'] = new_df['Application Link']
+    
     # 3. Check if we have historical data saved on the server
     if os.path.exists(filename):
-        existing_df = pd.read_csv(filename)
-        # Combine old and new data
-        combined_df = pd.concat([existing_df, new_df])
-        # Drop duplicates using the unique job link
-        final_df = combined_df.drop_duplicates(subset=['link'], keep='first')
-        
-        # Calculate how many genuinely new jobs we found
-        new_jobs_added = len(final_df) - len(existing_df)
+        try:
+            existing_df = pd.read_csv(filename)
+            
+            # --- HARMONIZATION: Fix old saved data ---
+            if 'Application Link' in existing_df.columns and 'link' not in existing_df.columns:
+                existing_df['link'] = existing_df['Application Link']
+            if 'Job Title/Search Term' in existing_df.columns and 'title' not in existing_df.columns:
+                existing_df['title'] = existing_df['Job Title/Search Term']
+                
+            # Combine old and new data safely
+            combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+        except Exception as e:
+            print(f"Error reading old CSV, starting fresh: {e}")
+            combined_df = new_df
+            existing_df = pd.DataFrame() # Empty fallback
     else:
         # First time running
-        final_df = new_df
-        new_jobs_added = len(final_df)
+        combined_df = new_df
+        existing_df = pd.DataFrame() # Empty fallback
+        
+    # --- SAFE DUPLICATE CHECK ---
+    if 'link' in combined_df.columns:
+        final_df = combined_df.drop_duplicates(subset=['link'], keep='first')
+    else:
+        # Extreme fallback if 'link' still doesn't exist
+        fallback_col = 'Application Link' if 'Application Link' in combined_df.columns else combined_df.columns[0]
+        final_df = combined_df.drop_duplicates(subset=[fallback_col], keep='first')
+        
+    # Calculate how many genuinely new jobs we found
+    new_jobs_added = len(final_df) - len(existing_df)
         
     # 4. Save to the server so it remembers for next time
     final_df.to_csv(filename, index=False)
     
     # 5. USER PERSPECTIVE: Convert the final table into raw CSV text format
-    # The .encode('utf-8') turns it into a format Streamlit can send as a download
     csv_for_download = final_df.to_csv(index=False).encode('utf-8')
     
-    return csv_for_download, new_jobs_added
+    # max(0, ...) ensures we never return a negative number by accident
+    return csv_for_download, max(0, new_jobs_added)
