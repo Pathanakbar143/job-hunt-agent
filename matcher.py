@@ -28,7 +28,7 @@ def analyze_job_fit(resume_text, job_desc, gemini_key):
     # )
     llm = ChatGroq(
        model="llama-3.1-8b-instant", # Extremely fast, smart open-source model
-       groq_api_key=groq_api_key,   # Pass your new Groq key here
+       groq_api_key=gemini_key,   # Pass your new Groq key here
        temperature=0.2
    )
 

@@ -19,8 +19,8 @@ st.title("🤖 AI Job Search Agent")
 
 # --- SIDEBAR CONFIGURATION ---
 # st.sidebar.header("API Configuration")
-# gemini_key = st.sidebar.text_input("Enter Google Gemini API Key", type="password")
-# serper_key = st.sidebar.text_input("Enter Serper.dev API Key", type="password")
+gemini_key = st.sidebar.text_input("Enter Google Gemini API Key", type="password")
+serper_key = st.sidebar.text_input("Enter Serper.dev API Key", type="password")
 
 # Session state to hold the resume text in memory
 if "cleaned_text" not in st.session_state:
