@@ -10,3 +10,4 @@ google-auth
 streamlit
 pandas
 python-dotenv
+google-generativeai
