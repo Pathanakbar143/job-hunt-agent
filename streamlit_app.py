@@ -5,6 +5,7 @@ import os
 import time
 from agents.agent import job_agent_app
 from utils.pdf_reader import extract_text_from_pdf,clean_text
+from sheet_connector import sync_with_google_sheet
 
 # Your custom modules
 from matcher import analyze_job_fit
@@ -19,8 +20,11 @@ st.title("🤖 AI Job Search Agent")
 
 # --- SIDEBAR CONFIGURATION ---
 # st.sidebar.header("API Configuration")
+st.sidebar.markdown("### 🔌 Integrations")
 gemini_key = st.sidebar.text_input("Enter Google Gemini API Key", type="password")
 serper_key = st.sidebar.text_input("Enter Serper.dev API Key", type="password")
+sheet_url = st.sidebar.text_input("Google Sheet URL (Optional)", placeholder="Paste link here...")
+st.sidebar.caption("Share your sheet with: `your-bot-email@...` as an Editor first!")
 
 # Session state to hold the resume text in memory
 if "cleaned_text" not in st.session_state:
@@ -98,6 +102,17 @@ if st.button("Deploy Agent"):
                 # Save to CSV
                 csv_file, new_count = save_to_spreadsheet(scored_jobs)
                 
+                # NEW: Sync to Google Sheets if the user provided a link!
+                if sheet_url:
+                    with st.spinner("☁️ Syncing results to your Google Sheet..."):
+                        new_jobs_df = pd.DataFrame(scored_jobs)
+                        success, result = sync_with_google_sheet(new_jobs_df, sheet_url)
+                        
+                        if success:
+                            st.success(f"Successfully synced to Google Sheets! Added {result} new unique jobs.")
+                        else:
+                            st.error(f"Failed to connect to Google Sheets: {result}")
+                            
                 if csv_file is not None:
                     st.download_button(
                         label="📥 Download Your Scored Jobs & Cover Letters (CSV)",

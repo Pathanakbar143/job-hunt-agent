@@ -15,3 +15,4 @@ apify-client
 pypdf
 pydantic
 duckduckgo-api-haystack
+gspread
